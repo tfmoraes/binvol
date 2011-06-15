@@ -14,32 +14,36 @@ def smooth(image):
     A3 = perim(A2)
     A = A0 | A1 | A2 | A3
 
-    for i in xrange(10):
-        gy, gx = np.gradient(u)
+    if image.ndim == 2:
+        for i in xrange(10):
+            gy, gx = np.gradient(u)
 
-        # gradient magnitude
-        g_mag = np.sqrt(gx**2 + gy**2)
+            # gradient magnitude
+            g_mag = np.sqrt(gx**2 + gy**2)
 
-        n_gy = gy / (g_mag + (g_mag == 0))
-        n_gx = gx / (g_mag + (g_mag == 0))
+            n_gy = gy / (g_mag + (g_mag == 0))
+            n_gx = gx / (g_mag + (g_mag == 0))
 
-        dy_n_gx, dx_n_gx = np.gradient(n_gx)
-        dy_n_gy, dx_n_gy = np.gradient(n_gy)
-        
-        # mean curvature
-        k = dx_n_gx + dy_n_gy
+            dy_n_gx, dx_n_gx = np.gradient(n_gx)
+            dy_n_gy, dx_n_gy = np.gradient(n_gy)
+            
+            # mean curvature
+            k = dx_n_gx + dy_n_gy
 
-        # H is the gradient magnitude times the mean curvature
-        H = g_mag * k
+            # H is the gradient magnitude times the mean curvature
+            H = g_mag * k
 
-        nu = u.copy()
-        temp_u = u + dt * H
-        print temp_u
-        nu[image] = np.fmax(temp_u[image], 0)
-        nu[~image] = np.fmin(temp_u[~image], 0)
+            nu = u.copy()
+            temp_u = u + dt * H
+            nu[image] = np.fmax(temp_u[image], 0.5)
+            nu[~image] = np.fmin(temp_u[~image], 0.5)
 
-        u = nu.copy()
+            u = nu.copy()
 
+    elif image.ndim == 3:
+        pass
+    else:
+        raise NotImplemented
     return nu
 
 
