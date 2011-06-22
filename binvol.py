@@ -106,17 +106,33 @@ def binvol(image):
     return B
 
 def __make_thorus():
-    x,y,z = ogrid[0:75,0:75,0:75]
-    c = 37 
+    x,y,z = np.ogrid[0:300,0:300,0:300]
+    c = 150 
     r2 = 40
-    teta = pi/8.0
-    R_t = 25
-    r_t = 10
-    thorus = (R_t - sqrt((x-c)**2+(y-c)**2))**2 + (z-c)**2 <= r_t**2
+    teta = np.pi/8.0
+    R_t = 75
+    r_t = 25
+    thorus = (R_t - np.sqrt((x-c)**2+(y-c)**2))**2 + (z-c)**2 <= r_t**2
     return thorus
 
 def __test_thorus():
-    pass
+    print "> Testing thorus"
+    thorus = __make_thorus()
+    m_thorus = np.memmap('thorus.dat', dtype=thorus.dtype, shape=thorus.shape,
+                         mode='w+')
+    m_thorus[:] = thorus
+    m_thorus.flush()
+    del m_thorus
+
+    smoothed_thorus = smooth(thorus, N)
+    m_smoothed_thorus = np.memmap('smoothed_thorus.dat',
+                                  dtype=smoothed_thorus.dtype,
+                                  shape=smoothed_thorus.shape,
+                                  mode='w+')
+    m_smoothed_thorus[:] = smoothed_thorus[:]
+    m_smoothed_thorus.flush()
+    del m_smoothed_thorus 
+
 
 def __test_lena():
     print "> Testing lena"
@@ -143,8 +159,9 @@ def __test_circle():
     imsave('smoothed_ball.png', smoothed_ball)
 
 def main():
-    __test_lena()
-    __test_circle()
+    #__test_lena()
+    #__test_circle()
+    __test_thorus()
     
 
 if __name__ == '__main__':
