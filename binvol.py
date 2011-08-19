@@ -106,12 +106,11 @@ def binvol(image):
     return B
 
 def __make_thorus():
-    x,y,z = np.ogrid[0:300,0:300,0:300]
-    c = 150 
-    r2 = 40
+    x,y,z = np.ogrid[0:100,0:100,0:100]
+    c = 50
     teta = np.pi/8.0
-    R_t = 75
-    r_t = 25
+    R_t = 35
+    r_t = 15
     thorus = (R_t - np.sqrt((x-c)**2+(y-c)**2))**2 + (z-c)**2 <= r_t**2
     return thorus
 
@@ -150,18 +149,18 @@ def __test_lena():
 def __test_circle():
     print "> Testing circle"
     from scipy.misc import imsave
-    y, x = np.ogrid[0: 500, 0: 500]
-    cx, cy = 250, 250
-    r = 200
+    y, x = np.ogrid[0: 1000, 0: 1000]
+    cx, cy = 500, 500
+    r = 400
     ball = (y - cy)**2 + (x - cx)**2 <= r**2
     smoothed_ball = smooth(ball, N)
     imsave('ball.png', ball)
     imsave('smoothed_ball.png', smoothed_ball)
 
 def main():
-    #__test_lena()
-    #__test_circle()
-    __test_thorus()
+    __test_lena()
+    __test_circle()
+    #__test_thorus()
     
 
 if __name__ == '__main__':

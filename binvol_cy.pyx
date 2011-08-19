@@ -45,15 +45,15 @@ cdef calculate_pixel_mean_curvature(np.ndarray image, int x, int y):
 
         fyy = (image[y + k, x] - 2*image[y,x] + image[y - k, x]) / (k*k)
 
-        fxy = (image[y + k, x + h] - image[y - k, x + h] - image[y + k, y - h] + image[y - k, x - h]) / (4.0*h*k)
+        fxy = (image[y + k, x + h] - image[y - k, x + h] - image[y + k, x - h] + image[y - k, x - h]) / (4.0*h*k)
 
         curvature = (fxx*(1 + fy*fy) - 2.0*fxy*fx*fy + fyy*(1+fx*fx)) /(2 * (1 + fx*fx + fy*fy)**1.5)
 
     return curvature
 
 def smooth(np.ndarray image, int n):
-    cdef double dt, gm, K, H
-    cdef int i, j, k, p
+    cdef double dt, gm, K, H, cn, diff
+    cdef int i, j, k, p, A_sum
     cdef np.ndarray A0, A1, A2, A3, A
     cdef np.ndarray out
     cdef np.ndarray tmp
@@ -69,23 +69,27 @@ def smooth(np.ndarray image, int n):
     A3 = perim(A2)
     A = A0 | A1 | A2 | A3
 
+    A_sum = A.sum()
+
     out = image.astype('double')
 
     if image.ndim == 2:
         for p in xrange(n):
             tmp = out.copy()
+            diff = 0
             for i in xrange(image.shape[0]):
                 for j in xrange(image.shape[1]):
                     if A[i, j]:
                         gm = calculate_pixel_gradient_magnitude(tmp, i, j)
                         K = calculate_pixel_mean_curvature(tmp, i, j)
                         H = gm * K
-                        print H
                         if image[i, j]:
                             out[i, j] = max((tmp[i,j] + dt*H, 0.5))
                         else:
                             out[i, j] = min((tmp[i,j] + dt*H, 0.5))
-
+                        diff += (out[i, j] - tmp[i, j])**2
+            cn = (1.0/A_sum * diff) ** 0.5
+            print cn
     else:
         pass
 
