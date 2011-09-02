@@ -1,10 +1,13 @@
 import mahotas
 import numpy as np
 cimport numpy as np
+cimport cython
 
 N = 100
 THRESHOLD = 0.0001
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def perim(np.ndarray image):
     if image.ndim == 2:
         # Connectivity 8
@@ -13,6 +16,8 @@ def perim(np.ndarray image):
         # Connectivity 26
         return mahotas.labeled.borders(image, np.ones((3, 3, 3)))
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def calculate_pixel_gradient_magnitude(np.ndarray image, int y, int x):
     cdef double gx, gy, gz, gm
 
@@ -31,6 +36,8 @@ def calculate_pixel_gradient_magnitude(np.ndarray image, int y, int x):
 
     return gm
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def calculate_pixel_mean_curvature(np.ndarray image, int y, int x):
     cdef double fx, fy, fxx, fyy, fxy, curvature
     cdef int h, k
@@ -51,7 +58,9 @@ def calculate_pixel_mean_curvature(np.ndarray image, int y, int x):
 
     return curvature
 
-def calculate_H(np.ndarray image, int x, int y, int z):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef double calculate_H(np.ndarray image, int x, int y, int z):
     cdef double fx, fy, fz, fxx, fyy, fzz, fxy, fxz, fyz, H
     cdef int h, k, l
 
@@ -84,7 +93,7 @@ def calculate_H(np.ndarray image, int x, int y, int z):
             / (4.0*k*l)
 
     try:
-        H = ((fy*fy + fx*fx)*fxx + (fx*fx + fz*fz)*fyy \
+        H = ((fy*fy + fz*fz)*fxx + (fx*fx + fz*fz)*fyy \
                 + (fx*fx + fy*fy)*fzz - 2*(fx*fy*fxy \
                 + fx*fz*fxz + fy*fz*fyz)) \
                 / (fx*fx + fy*fy + fz*fz)
@@ -93,9 +102,11 @@ def calculate_H(np.ndarray image, int x, int y, int z):
 
     return H
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def smooth(np.ndarray image, int n):
     cdef double dt, gm, K, H, cn, diff
-    cdef int i, j, k, p, A_sum
+    cdef int i, j, k, p, A_sum, di, dj, dk
     cdef np.ndarray A0, A1, A2, A3, A
     cdef np.ndarray out
     cdef np.ndarray tmp
@@ -133,12 +144,15 @@ def smooth(np.ndarray image, int n):
             cn = (1.0/A_sum * diff) ** 0.5
             print cn
     else:
+        di = image.shape[0]
+        dj = image.shape[1]
+        dk = image.shape[2]
         for p in xrange(n):
             tmp = out.copy()
             diff = 0
-            for i in xrange(image.shape[0]):
-                for j in xrange(image.shape[1]):
-                    for k in xrange(image.shape[2]):
+            for i from 0 <= i < di:
+                for j from 0 <= j < dj:
+                    for k from 0 <= k < dk:
                         if A[i, j, k]:
                             H = calculate_H(tmp, k, j, i)
                             if image[i, j, k]:
